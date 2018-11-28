@@ -10,7 +10,7 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from mpl_toolkits.mplot3d.art3d import Line3DCollection
 from scipy.spatial import ConvexHull
 import matplotlib.pyplot as plt
-
+from . import systems
 
 def _digest_data(x, y, z):
     """Given 3D data, shear the x and y values so that the
@@ -26,6 +26,18 @@ def _digest_data(x, y, z):
     digested = ternary.equil_trans(digestable)
 
     return digested
+
+def _get_min_z_points(points):
+    """Given 3D data, return the points at each unique x and y
+    that have the minimum z value
+    """
+    zipped_coords=sorted(zip(points[:,0],points[:,1],points[:,2]))
+    min_list=[0]
+    for i in range(1,len(zipped_coords)):
+        if zipped_coords[i][0]!=zipped_coords[i-1][0] or zipped_coords[i][1]!= zipped_coords[i-1][1]:
+            min_list.append(i)
+    min_coords=[zipped_coords[i] for i in min_list]
+    return min_coords
 
 
 def scatter3(ax, x, y, z, *args, **kwargs):
@@ -159,6 +171,46 @@ def draw_projected_convex_hull(ax,
     ax.set_aspect('equal')
 
     return ax
+
+def hull_dist_contour(ax,
+                               x,
+                               y,
+                               z,
+                               kwargs={
+                                   "edgecolor": "black",
+                                   "linewidth": 1.5,
+                                   "fill": False
+                               }):
+    """Draw the convex hull, but suppress the energy axis, yielding projected facets
+    onto the composition plane also scatter plot the closest points to the hull where
+    the color of the point represents the distance from hull
+
+    :ax: matplotlib axis
+    :kwargs: keyword arguments for the add_patch function
+    :returns: matplotlib axis
+
+    """
+    digested = _digest_data(x, y, z)
+    closest_points=_get_min_z_points(digested)
+    closest_hull_dists=systems.hull.distances_from_hull(closest_points,ConvexHull(digested))
+    print("max hull dist")
+    print(max(closest_hull_dists))
+    #closest_hull_dists=closest_hull_dists/.200
+    #print("max hull dist")
+    #print(max(closest_hull_dists))
+    facets = ternary.pruned_hull_facets(digested)
+    closest_xs=[c[0] for c in closest_points]
+    closest_ys=[c[1] for c in closest_points]
+    for f in facets:
+        ax = _draw_projected_facet(ax, f, kwargs)
+    ax.scatter(closest_xs,closest_ys,c=closest_hull_dists,s=40,vmin=0,vmax=0.2,cmap='coolwarm')
+    ax.set_xlim([-0.1, 1.1])
+    ax.set_ylim([-0.1, 1.1])
+    ax.set_aspect('equal')
+
+    return ax
+
+
 
 def scatter_projected_convex_hull(ax, x, y, z, **kwargs):
     """Draw the points that make up the convex hull, but plot
@@ -351,6 +403,12 @@ class Energy3(object):
         return hull_points(self._running_data[self._xlabel],
                             self._running_data[self._ylabel],
                             self._running_data[self._zlabel])
+    def hull_dist_contour(self,ax):
+        return hull_dist_contour(ax,
+                            self._running_data[self._xlabel],
+                            self._running_data[self._ylabel],
+                            self._running_data[self._zlabel])
+
 
 
 class Energy2(object):
