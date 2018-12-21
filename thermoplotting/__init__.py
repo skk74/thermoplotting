@@ -1,3 +1,4 @@
+
 from __future__ import absolute_import
 
 from . import binary
@@ -16,5 +17,5 @@ from .energy import Energy2
 from .selection import Selection
 from . import systems
 from . import split
-from . import casmfiles
+#from . import casmfiles
 from . import kinetics

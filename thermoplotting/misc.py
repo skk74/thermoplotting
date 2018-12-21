@@ -4,7 +4,7 @@ from builtins import zip
 
 import numpy as np
 import pandas as pd
-import casm.project
+#import casm.project
 import os
 import hashlib
 import json

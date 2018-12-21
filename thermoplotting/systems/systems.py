@@ -5,9 +5,9 @@ from builtins import object
 import pandas as pd
 import pickle
 import os
-from ..misc import casm_query
+#from ..misc import casm_query
 import thermoplotting.misc
-import casm
+#import casm
 
 class GenericSystem(object):
 
