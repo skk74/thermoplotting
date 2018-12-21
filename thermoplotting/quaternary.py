@@ -4,7 +4,7 @@ from __future__ import division
 import scipy.spatial as spa
 import scipy.linalg as lin
 import numpy as np
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+from mpl_toolkits.mplot3d.art3d import Line3DCollection
 import matplotlib.pyplot as plt
 from scipy.spatial import ConvexHull
 from . import systems
@@ -108,8 +108,15 @@ def _draw_projected_facet(ax, facet, kwargs):
 
     """
     coords = facet[:, [0, 1, 2]]
-    tetr = Poly3DCollection([coords], **kwargs)
-    tetr.set_facecolor((1,1,1,0.01))
+    edgelist=[(coords[0],coords[1]),
+              (coords[0],coords[2]),
+              (coords[0],coords[3]),
+              (coords[1],coords[2]),
+              (coords[1],coords[3]),
+              (coords[2],coords[3])
+            ]
+    tetr = Line3DCollection(edgelist, **kwargs)
+    tetr.set_facecolor((1,1,1,0.81))
     ax.add_collection3d(tetr)
     return ax
 
@@ -133,7 +140,7 @@ def _scatter_projected_facet(ax, facet, **kwargs):
     ax.scatter(facet[:,0],facet[:,1],facet[:,2],**kwargs)
     return ax
 
-def pruned_hull_facets(data_list,tol=0.00001):
+def pruned_hull_facets(data_list,tol=0.000001):
     """Calls facets() to get all facets of the convex hull, but then
     removes all facets on binary subspace, as well as any resulting
     facets above the reference endpoints.
@@ -145,7 +152,6 @@ def pruned_hull_facets(data_list,tol=0.00001):
     #TODO: Consolidate with routines in hull module
     new_tetr = spa.ConvexHull(data_list) #pylint: disable=no-member
     good_simplex=[]
-
     for eq,sx in zip(new_tetr.equations,new_tetr.simplices):
         if eq[3]<0-tol:
             good_simplex.append(sx)
@@ -214,7 +220,7 @@ def hull_dist_contour(ax,
     closest_zs=[c[2] for c in closest_points]
     for f in facets:
         ax = _draw_projected_facet(ax, f, kwargs)
-    ax.scatter(closest_xs,closest_ys,closest_zs,c=closest_hull_dists,s=40,vmin=0,vmax=0.3,cmap='viridis')
+    ax.scatter(closest_xs,closest_ys,closest_zs,c=closest_hull_dists,s=40,vmin=0,vmax=0.25,cmap='viridis')
     ax.set_xlim([-0.1, 1.1])
     ax.set_ylim([-0.1, 1.1])
     ax.set_zlim([-0.1, 1.1])
